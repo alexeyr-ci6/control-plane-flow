@@ -19,7 +19,10 @@ RSpec.describe "GitHub Docker build secrets" do # rubocop:disable RSpec/Describe
         id, path = argument.delete_prefix("--secret=id=").split(",src=", 2)
         [id, File.read(path)]
       end
-      File.write(ENV.fetch("BUILD_CAPTURE"), JSON.generate({ "arguments" => ARGV, "secrets" => secrets }))
+      File.write(ENV.fetch("BUILD_CAPTURE"), JSON.generate({
+        "arguments" => ARGV,
+        "secrets" => secrets
+      }))
       exit Integer(ENV.fetch("BUILD_STATUS", "0"))
     RUBY
   end
@@ -27,12 +30,18 @@ RSpec.describe "GitHub Docker build secrets" do # rubocop:disable RSpec/Describe
   let(:directory) { Dir.mktmpdir("cpflow build secrets ") }
   let(:bin) { File.join(directory, "bin") }
 
-  def build_environment
+  def build_environment # rubocop:disable Metrics/MethodLength
     {
-      "PATH" => "#{bin}:#{ENV.fetch('PATH')}", "BUILD_CAPTURE" => File.join(directory, "capture.json"),
-      "BUILD_STATUS" => "0", "APP_NAME" => "test-app", "COMMIT_SHA" => "a" * 40,
-      "CONTROL_PLANE_ORG" => "test-org", "DOCKER_BUILD_EXTRA_ARGS" => "", "PR_NUMBER" => "",
-      "CPFLOW_BUILD_SSH_PREPPED" => "false", "WORKING_DIRECTORY" => directory,
+      "PATH" => "#{bin}:#{ENV.fetch('PATH')}",
+      "BUILD_CAPTURE" => File.join(directory, "capture.json"),
+      "BUILD_STATUS" => "0",
+      "APP_NAME" => "test-app",
+      "COMMIT_SHA" => "a" * 40,
+      "CONTROL_PLANE_ORG" => "test-org",
+      "DOCKER_BUILD_EXTRA_ARGS" => "",
+      "PR_NUMBER" => "",
+      "CPFLOW_BUILD_SSH_PREPPED" => "false",
+      "WORKING_DIRECTORY" => directory,
       "DOCKER_BUILD_SECRET_DIRECTORY" => secret_directory
     }
   end
@@ -51,7 +60,10 @@ RSpec.describe "GitHub Docker build secrets" do # rubocop:disable RSpec/Describe
       "GITHUB_OUTPUT" => File.join(directory, "outputs"),
       "DOCKER_BUILD_SECRETS" => secrets
     }
-    Open3.capture3(environment, "bash", "-c", step("Prepare Docker build secrets").fetch("run"))
+    Open3.capture3(
+      environment,
+      "bash", "-c", step("Prepare Docker build secrets").fetch("run")
+    )
   end
 
   def secret_directory
@@ -63,7 +75,10 @@ RSpec.describe "GitHub Docker build secrets" do # rubocop:disable RSpec/Describe
     FileUtils.mkdir_p(bin)
     File.write(File.join(bin, "cpflow"), build_cli_script)
     FileUtils.chmod(0o755, File.join(bin, "cpflow"))
-    Open3.capture3(build_environment.merge(overrides), "bash", "-c", step("Build Docker image").fetch("run"))
+    Open3.capture3(
+      build_environment.merge(overrides),
+      "bash", "-c", step("Build Docker image").fetch("run")
+    )
   end
 
   it "exposes an optional build-secret input" do
@@ -76,7 +91,11 @@ RSpec.describe "GitHub Docker build secrets" do # rubocop:disable RSpec/Describe
       workflow = YAML.safe_load_file(path)
       triggers = workflow["on"] || workflow.fetch(true)
       expect(triggers.dig("workflow_call", "inputs", "docker_build_extra_args"))
-        .to include("required" => false, "type" => "string", "default" => "")
+        .to include(
+          "required" => false,
+          "type" => "string",
+          "default" => ""
+        )
       expect(triggers.dig("workflow_call", "secrets", "DOCKER_BUILD_SECRETS"))
         .to include("required" => false)
       build_step = workflow.fetch("jobs").values.flat_map { |job| job.fetch("steps", []) }
@@ -117,8 +136,11 @@ RSpec.describe "GitHub Docker build secrets" do # rubocop:disable RSpec/Describe
   end
 
   it "cleans up secrets after build failure and before-build argument failures" do
-    [{ "BUILD_STATUS" => "1" }, { "DOCKER_BUILD_EXTRA_ARGS" => "--build-arg BAD" },
-     { "WORKING_DIRECTORY" => "missing-directory" }].each do |overrides|
+    [
+      { "BUILD_STATUS" => "1" },
+      { "DOCKER_BUILD_EXTRA_ARGS" => "--build-arg BAD" },
+      { "WORKING_DIRECTORY" => "missing-directory" }
+    ].each do |overrides|
       expect(prepare("sentry_auth_token=test-secret").last).to be_success
       prepared_directory = secret_directory
       _stdout, _stderr, status = build(overrides)
@@ -130,8 +152,13 @@ RSpec.describe "GitHub Docker build secrets" do # rubocop:disable RSpec/Describe
   end
 
   it "rejects malformed, empty, and duplicate entries without leaking or retaining values" do
-    ["../escape=test-secret", "invalid entry=test-secret", "missing-equals-test-secret", "empty=",
-     "duplicate=test-secret\nduplicate=another"].each do |secrets|
+    [
+      "../escape=test-secret",
+      "invalid entry=test-secret",
+      "missing-equals-test-secret",
+      "empty=",
+      "duplicate=test-secret\nduplicate=another"
+    ].each do |secrets|
       stdout, stderr, status = prepare(secrets)
 
       expect(status).not_to be_success
@@ -146,7 +173,8 @@ RSpec.describe "GitHub Docker build secrets" do # rubocop:disable RSpec/Describe
     cleanup = step("Clean up Docker build secrets")
     expect(cleanup.fetch("if")).to include("always()")
     _stdout, stderr, status = Open3.capture3(
-      { "DOCKER_BUILD_SECRET_DIRECTORY" => prepared_directory }, "bash", "-c", cleanup.fetch("run")
+      { "DOCKER_BUILD_SECRET_DIRECTORY" => prepared_directory },
+      "bash", "-c", cleanup.fetch("run")
     )
 
     expect(status).to be_success, stderr
