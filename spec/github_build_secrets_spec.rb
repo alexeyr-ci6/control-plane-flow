@@ -111,7 +111,7 @@ RSpec.describe "GitHub Docker build secrets" do # rubocop:disable RSpec/Describe
     expect(status).to be_success, stderr
     capture = JSON.parse(File.read(File.join(directory, "capture.json")))
     expect(capture.fetch("secrets")).to eq("sentry_auth_token" => "test-secret")
-    expect(capture.fetch("arguments")).to include("--build-arg=CONTROLPLANE_COMMIT_SHA=#{'a' * 40}")
+    expect(capture.fetch("arguments")).to include("--commit=#{'a' * 40}")
     expect(stdout + stderr + capture.fetch("arguments").join).not_to include("test-secret")
     expect(File).not_to exist(prepared_directory)
   end

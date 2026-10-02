@@ -170,7 +170,7 @@ runs:
         set -euo pipefail
 
         PR_INFO=""
-        docker_build_args=("--build-arg=CONTROLPLANE_COMMIT_SHA=${COMMIT_SHA}")
+        docker_build_args=()
         build_ssh_prepped="${CPFLOW_BUILD_SSH_PREPPED:-false}"
 
         cleanup_build_ssh() {

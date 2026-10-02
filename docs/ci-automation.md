@@ -641,7 +641,7 @@ sentry_auth_token=<source-map upload token>
 npm_token=<private package token>
 ```
 
-The generated staging and review-app callers forward this optional secret automatically. The build action writes each value to a private temporary file, passes only its path through `--secret=id=...,src=...`, and removes the files on success or failure. Values are not passed as build arguments or persisted through `GITHUB_ENV`. The action also passes the deployment commit as the non-secret `CONTROLPLANE_COMMIT_SHA` build argument.
+The generated staging and review-app callers forward this optional secret automatically. The build action writes each value to a private temporary file, passes only its path through `--secret=id=...,src=...`, and removes the files on success or failure. Values are not passed as build arguments or persisted through `GITHUB_ENV`.
 
 A Dockerfile can consume a token only for the command that needs it:
 
