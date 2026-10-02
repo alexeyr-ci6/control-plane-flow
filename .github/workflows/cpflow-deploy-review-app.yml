@@ -12,6 +12,9 @@ on:
       CPLN_TOKEN_STAGING:
         description: Control Plane token for the staging org that owns review apps.
         required: true
+      DOCKER_BUILD_SECRETS:
+        description: Optional newline-delimited id=value secrets passed through BuildKit secret mounts.
+        required: false
       DOCKER_BUILD_SSH_KEY:
         description: Optional SSH key used by Docker builds that fetch private dependencies.
         required: false
@@ -929,6 +932,7 @@ jobs:
           commit: ${{ env.PR_SHA }}
           pr_number: ${{ env.PR_NUMBER }}
           docker_build_extra_args: ${{ vars.DOCKER_BUILD_EXTRA_ARGS }}
+          docker_build_secrets: ${{ secrets.DOCKER_BUILD_SECRETS }}
           docker_build_ssh_key: ${{ secrets.DOCKER_BUILD_SSH_KEY }}
           docker_build_ssh_known_hosts: ${{ vars.DOCKER_BUILD_SSH_KNOWN_HOSTS }}
           working_directory: app
