@@ -75,10 +75,14 @@ RSpec.describe "GitHub Docker build secrets" do # rubocop:disable RSpec/Describe
       path = File.expand_path("../.github/workflows/cpflow-deploy-#{name}.yml", __dir__)
       workflow = YAML.safe_load_file(path)
       triggers = workflow["on"] || workflow.fetch(true)
+      expect(triggers.dig("workflow_call", "inputs", "docker_build_extra_args"))
+        .to include("required" => false, "type" => "string", "default" => "")
       expect(triggers.dig("workflow_call", "secrets", "DOCKER_BUILD_SECRETS"))
         .to include("required" => false)
       build_step = workflow.fetch("jobs").values.flat_map { |job| job.fetch("steps", []) }
                                                 .find { |entry| entry["name"] == "Build Docker image" }
+      expect(build_step.dig("with", "docker_build_extra_args"))
+        .to eq("${{ vars.DOCKER_BUILD_EXTRA_ARGS }}\n${{ inputs.docker_build_extra_args }}\n")
       expect(build_step.dig("with", "docker_build_secrets")).to eq("${{ secrets.DOCKER_BUILD_SECRETS }}")
       caller_path = File.expand_path("../lib/github_flow_templates/.github/workflows/cpflow-deploy-#{name}.yml",
                                      __dir__)

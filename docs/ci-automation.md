@@ -652,7 +652,7 @@ RUN --mount=type=secret,id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
     SENTRY_UPLOAD=${SENTRY_UPLOAD} npm run build
 ```
 
-If the application's build requires an explicit upload opt-in, add `--build-arg=SENTRY_UPLOAD=true` to `DOCKER_BUILD_EXTRA_ARGS`. Token availability alone need not enable uploads. BuildKit secret values do not invalidate build caches; force the relevant build step to run again when rotating a credential requires repeating an upload.
+If the application's build requires an explicit upload opt-in, pass `docker_build_extra_args: --build-arg=SENTRY_UPLOAD=true` in the caller workflow's `with` block, or add that token to `DOCKER_BUILD_EXTRA_ARGS`. The optional workflow input is appended after the repository variable, retaining existing build arguments. Token availability alone need not enable uploads. BuildKit secret values do not invalidate build caches; force the relevant build step to run again when rotating a credential requires repeating an upload.
 
 These secrets are available to staging and authorized review-app Docker builds. Apply the review-app security guidance above and scope each credential to the build operation it needs.
 
